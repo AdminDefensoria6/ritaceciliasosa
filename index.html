@@ -905,7 +905,7 @@
                     <option value="Patrocinante Demandado">Patrocinante Demandado</option>
                     <option value="Patrocinante Tercero">Patrocinante Tercero</option>
                     <option value="Defensor de Ausente">Defensor de Ausente</option>
-                    <option value="Defensor MPC Incapaz">Defensor MPC incapaz</option>
+                    <option value="Defensor MPC Incapaz">Defensor MPC Incapaz</option>
                     <option value="Asesor de incapaces">Asesor de incapaces</option>
                 </select>
             </div>
@@ -1214,18 +1214,11 @@
         // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyB95Gfv9bXvxzDy2FNL6kqBCjOdelXMf7Y",
-
-  authDomain: "causas-ritasosa.firebaseapp.com",
-
-  projectId: "causas-ritasosa",
-
-  storageBucket: "causas-ritasosa.firebasestorage.app",
-
-  messagingSenderId: "263960917639",
-
-  appId: "1:263960917639:web:a22dab94339643f0fc6a22"
-
-
+            authDomain: "causas-ritasosa.firebaseapp.com",
+            projectId: "causas-ritasosa",
+            storageBucket: "causas-ritasosa.firebasestorage.app",
+            messagingSenderId: "263960917639",
+            appId: "1:263960917639:web:a22dab94339643f0fc6a22"
         };
 
         // Inicializar Firebase
@@ -1345,10 +1338,8 @@
             }
         }
 
-        function mostrarExpedientesEnTabla() {
-            expedientesTbody.innerHTML = '';
-            
-            const expedientesFiltrados = expedientes.filter(exp => {
+        function obtenerExpedientesFiltrados() {
+            return expedientes.filter(exp => {
                 const searchText = searchInput.value.toLowerCase();
                 const selectedMonth = monthFilter.value;
                 const selectedYear = yearFilter.value;
@@ -1385,6 +1376,12 @@
                 
                 return true;
             });
+        }
+
+        function mostrarExpedientesEnTabla() {
+            expedientesTbody.innerHTML = '';
+            
+            const expedientesFiltrados = obtenerExpedientesFiltrados();
             
             // Calcular paginación
             const totalExpedientes = expedientesFiltrados.length;
@@ -1538,20 +1535,20 @@
             controles.appendChild(btnSiguiente);
         }
         
-        // Función para imprimir el listado completo de expedientes
-        function imprimirListadoCompleto() {
+        // Función para imprimir el listado de expedientes (filtrados o todos)
+        function imprimirListado() {
+            // Obtener expedientes filtrados
+            const expedientesFiltrados = obtenerExpedientesFiltrados();
+            
             // Crear una ventana nueva para imprimir
             const ventanaImpresion = window.open('', '_blank');
-            
-            // Obtener todos los expedientes sin filtrar
-            const expedientesCompletos = [...expedientes];
             
             // Crear el contenido HTML para la impresión
             let contenidoHTML = `
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Listado Completo de Expedientes</title>
+                    <title>Listado de Expedientes</title>
                     <style>
                         body {
                             font-family: Arial, sans-serif;
@@ -1582,10 +1579,37 @@
                         .firma-digital {
                             text-align: center;
                         }
+                        .filtros-aplicados {
+                            margin-bottom: 15px;
+                            padding: 10px;
+                            background-color: #f0f0f0;
+                            border-radius: 5px;
+                        }
                     </style>
                 </head>
                 <body>
-                    <h1>Listado Completo de Expedientes</h1>
+                    <h1>Listado de Expedientes</h1>
+            `;
+            
+            // Mostrar información de filtros aplicados
+            const filtrosAplicados = [];
+            if (searchInput.value) filtrosAplicados.push(`Búsqueda: "${searchInput.value}"`);
+            if (monthFilter.value) filtrosAplicados.push(`Mes: ${monthFilter.options[monthFilter.selectedIndex].text}`);
+            if (yearFilter.value) filtrosAplicados.push(`Año: ${yearFilter.value}`);
+            if (signatureFilter.value) filtrosAplicados.push(`Firma: ${signatureFilter.options[signatureFilter.selectedIndex].text}`);
+            if (controlFilter.value) filtrosAplicados.push(`Control: ${controlFilter.options[controlFilter.selectedIndex].text}`);
+            if (juzgadoFilter.value) filtrosAplicados.push(`Juzgado: ${juzgadoFilter.options[juzgadoFilter.selectedIndex].text}`);
+            if (intervencionFilter.value) filtrosAplicados.push(`Intervención: ${intervencionFilter.options[intervencionFilter.selectedIndex].text}`);
+            
+            if (filtrosAplicados.length > 0) {
+                contenidoHTML += `
+                    <div class="filtros-aplicados">
+                        <strong>Filtros aplicados:</strong> ${filtrosAplicados.join(', ')}
+                    </div>
+                `;
+            }
+            
+            contenidoHTML += `
                     <table>
                         <thead>
                             <tr>
@@ -1601,8 +1625,8 @@
             `;
             
             // Agregar cada expediente a la tabla
-            expedientesCompletos.forEach((exp, index) => {
-                const numeroDescendente = expedientesCompletos.length - index;
+            expedientesFiltrados.forEach((exp, index) => {
+                const numeroDescendente = expedientesFiltrados.length - index;
                 
                 let observacionesTexto = '';
                 if (exp.notas && exp.notas.length > 0) {
@@ -1984,7 +2008,7 @@
             registroGuardarBtn.addEventListener('click', guardarExpediente);
             
             // Reemplazar la función de impresión anterior
-            printBtn.addEventListener('click', imprimirListadoCompleto);
+            printBtn.addEventListener('click', imprimirListado);
             
             reporteBtn.addEventListener('click', () => {
                 window.open('https://admindefensoria6.github.io/ritaceciliasosa/reporte.html', '_blank');
